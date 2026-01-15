@@ -18,7 +18,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import { Loader2, PlusCircle, Edit, Trash2 } from 'lucide-react';
+import { Loader2, PlusCircle, Edit, Trash2, MoreHorizontal } from 'lucide-react';
 import { toast } from 'sonner';
 import DepartmentForm from '@/components/DepartmentForm';
 import { useUserRole } from '@/hooks/useUserRole';
@@ -221,7 +221,7 @@ const DepartmentsPage: React.FC = () => {
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" className="h-8 w-8 p-0">
                             <span className="sr-only">Abrir menu</span>
-                            <Loader2 className="h-4 w-4" /> {/* Placeholder for more-horizontal icon */}
+                            <MoreHorizontal className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
