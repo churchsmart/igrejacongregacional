@@ -48,20 +48,37 @@ const UsersPage: React.FC = () => {
   const { data: users, isLoading: usersLoading, error: usersError } = useQuery<UserProfile[], Error>({
     queryKey: ['adminUsers'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // First, get all profiles
+      const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
-        .select('id, first_name, last_name, role, updated_at, auth_users(email)')
-        .order('first_name', { ascending: true });
+        .select('id, first_name, last_name, role, updated_at');
 
-      if (error) {
-        throw new Error(error.message);
+      if (profilesError) {
+        throw new Error(profilesError.message);
       }
 
-      // Map to include email from auth.users
-      return data.map(profile => ({
-        ...profile,
-        email: (profile as any).auth_users?.email || 'N/A',
-      })) as UserProfile[];
+      // Then, for each profile, get the corresponding user email from auth.users
+      const usersWithEmails = await Promise.all(
+        profiles.map(async (profile) => {
+          // Get the user data from auth.users
+          const { data: { user }, error: userError } = await supabase.auth.admin.getUserById(profile.id);
+
+          if (userError) {
+            console.warn(`[UsersPage] Could not fetch user for profile ${profile.id}:`, userError.message);
+            return {
+              ...profile,
+              email: 'N/A',
+            };
+          }
+
+          return {
+            ...profile,
+            email: user?.email || 'N/A',
+          };
+        })
+      );
+
+      return usersWithEmails as UserProfile[];
     },
     enabled: !roleLoading && (currentUserRole === 'master' || currentUserRole === 'admin'),
   });
