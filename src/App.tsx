@@ -2,13 +2,22 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"; // Added Navigate
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
-import AdminDashboard from "./pages/AdminDashboard";
 import { SessionContextProvider } from "./contexts/SessionContext";
 import ProtectedRoute from "./components/ProtectedRoute";
+import AdminLayout from "./components/AdminLayout"; // Import AdminLayout
+import AdminDashboardContent from "./pages/admin/DashboardContent"; // Import the new dashboard content
+import UsersPage from "./pages/admin/UsersPage";
+import MembersPage from "./pages/admin/MembersPage";
+import DepartmentsPage from "./pages/admin/DepartmentsPage";
+import SchedulesPage from "./pages/admin/SchedulesPage";
+import EventsPage from "./pages/admin/EventsPage";
+import MediaPage from "./pages/admin/MediaPage";
+import SettingsPage from "./pages/admin/SettingsPage";
+import BiblePage from "./pages/admin/BiblePage";
 
 const queryClient = new QueryClient();
 
@@ -26,10 +35,23 @@ const App = () => (
               path="/admin/*" 
               element={
                 <ProtectedRoute>
-                  <AdminDashboard />
+                  <AdminLayout /> {/* AdminLayout is the main layout for all admin sub-routes */}
                 </ProtectedRoute>
               } 
-            />
+            >
+              {/* Nested routes for AdminLayout */}
+              <Route index element={<AdminDashboardContent />} /> {/* Default admin page */}
+              <Route path="dashboard" element={<AdminDashboardContent />} />
+              <Route path="users" element={<UsersPage />} />
+              <Route path="members" element={<MembersPage />} />
+              <Route path="departments" element={<DepartmentsPage />} />
+              <Route path="schedules" element={<SchedulesPage />} />
+              <Route path="events" element={<EventsPage />} />
+              <Route path="media" element={<MediaPage />} />
+              <Route path="bible" element={<BiblePage />} />
+              <Route path="settings" element={<SettingsPage />} />
+              <Route path="*" element={<Navigate to="/admin" replace />} /> {/* Catch-all for admin sub-routes */}
+            </Route>
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

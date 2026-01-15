@@ -1,38 +1,62 @@
 import React from 'react';
-import { Button } from '@/components/ui/button';
-import { supabase } from '@/integrations/supabase/client';
-import { useNavigate } from 'react-router-dom';
-import { MadeWithDyad } from '@/components/made-with-dyad';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import AdminLayout from '@/components/AdminLayout';
+import UsersPage from './admin/UsersPage';
+import MembersPage from './admin/MembersPage';
+import DepartmentsPage from './admin/DepartmentsPage';
+import SchedulesPage from './admin/SchedulesPage';
+import EventsPage from './admin/EventsPage';
+import MediaPage from './admin/MediaPage';
+import SettingsPage from './admin/SettingsPage';
+import BiblePage from './admin/BiblePage';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useChurchSettings } from '@/hooks/useChurchSettings';
+import { Loader2 } from 'lucide-react';
 
-const AdminDashboard: React.FC = () => {
-  const navigate = useNavigate();
+const AdminDashboardContent: React.FC = () => {
+  const { settings, isLoading } = useChurchSettings();
 
-  const handleLogout = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      console.error("[AdminDashboard] Logout error:", error.message);
-      toast.error("Failed to log out: " + error.message);
-    } else {
-      navigate('/login');
-    }
-  };
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 dark:bg-gray-900 p-4">
-      <Card className="w-full max-w-lg text-center">
-        <CardHeader>
-          <CardTitle className="text-3xl font-bold">Admin Dashboard</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-xl text-gray-600 dark:text-gray-400 mb-8">
-            Welcome to the protected admin area! More features will be built here.
-          </p>
-          <Button onClick={handleLogout} variant="destructive">Logout</Button>
-        </CardContent>
-      </Card>
-      <MadeWithDyad />
-    </div>
+    <Card className="w-full text-center">
+      <CardHeader>
+        <CardTitle className="text-3xl font-bold">
+          Bem-vindo ao Painel de Administração {settings?.church_name ? `da ${settings.church_name}` : ''}!
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <p className="text-xl text-gray-600 dark:text-gray-400 mb-8">
+          Use o menu lateral para navegar pelas funcionalidades.
+        </p>
+      </CardContent>
+    </Card>
+  );
+};
+
+const AdminDashboard: React.FC = () => {
+  return (
+    <AdminLayout>
+      <Routes>
+        <Route index element={<AdminDashboardContent />} />
+        <Route path="dashboard" element={<AdminDashboardContent />} />
+        <Route path="users" element={<UsersPage />} />
+        <Route path="members" element={<MembersPage />} />
+        <Route path="departments" element={<DepartmentsPage />} />
+        <Route path="schedules" element={<SchedulesPage />} />
+        <Route path="events" element={<EventsPage />} />
+        <Route path="media" element={<MediaPage />} />
+        <Route path="bible" element={<BiblePage />} />
+        <Route path="settings" element={<SettingsPage />} />
+        <Route path="*" element={<Navigate to="/admin" replace />} /> {/* Catch-all for admin sub-routes */}
+      </Routes>
+    </AdminLayout>
   );
 };
 

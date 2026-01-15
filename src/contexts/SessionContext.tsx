@@ -39,10 +39,9 @@ export const SessionContextProvider: React.FC<{ children: React.ReactNode }> = (
           if (location.pathname.startsWith('/admin')) {
             navigate('/login');
           }
-        } else if (event === 'AUTH_API_ERROR') {
-          toast.error('Authentication error. Please try again.');
-          console.error("[SessionContext] Auth API Error:", currentSession);
         }
+        // AUTH_API_ERROR is not a direct event type from onAuthStateChange.
+        // Errors are typically handled when making specific auth calls or via session object.
       }
     );
 
