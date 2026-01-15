@@ -195,7 +195,7 @@ const SchedulesPage: React.FC = () => {
 
   if (schedulesError) {
     return <p className="text-red-500">Erro ao carregar escalas: {schedulesError.message}</p>;
-  }
+    }
 
   if (!canManageSchedules && currentUserRole !== 'member') { // 'member' role can view, but not manage
     return (

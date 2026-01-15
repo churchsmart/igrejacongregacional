@@ -83,7 +83,7 @@ const ScheduleForm: React.FC<ScheduleFormProps> = ({
         },
   });
 
-  const { data: departments, isLoading: departmentsLoading } = useQuery<{ id: string; name: string }[], Error>({
+  const { data: departments, isLoading: departmentsLoading, error: departmentsError } = useQuery<{ id: string; name: string }[], Error>({
     queryKey: ['departments'],
     queryFn: async () => {
       const { data, error } = await supabase.from('departments').select('id, name').order('name', { ascending: true });
@@ -92,9 +92,14 @@ const ScheduleForm: React.FC<ScheduleFormProps> = ({
     },
   });
 
+  // Handle form submission
+  const handleSubmit = (values: ScheduleFormValues) => {
+    onSubmit(values);
+  };
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
         <FormField
           control={form.control}
           name="title"
