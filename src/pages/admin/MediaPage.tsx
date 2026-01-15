@@ -23,16 +23,16 @@ import {
 import { Loader2, UploadCloud, Trash2, FileText, Image as ImageIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { useUserRole } from '@/hooks/useUserRole';
-import { format } from 'date-fns'; // Added missing import
+import { format } from 'date-fns';
 
 interface MediaFile {
   name: string;
-  id: string; // Supabase Storage doesn't return an 'id', we'll use 'name' as a unique identifier for display
+  id: string;
   url: string;
   created_at: string;
 }
 
-const BUCKET_NAME = 'church_media';
+const BUCKET_NAME = 'media';
 
 const MediaPage: React.FC = () => {
   const queryClient = useQueryClient();
@@ -62,7 +62,7 @@ const MediaPage: React.FC = () => {
           const { data: publicUrlData } = supabase.storage.from(BUCKET_NAME).getPublicUrl(file.name);
           return {
             name: file.name,
-            id: file.name, // Using name as id for simplicity
+            id: file.name,
             url: publicUrlData.publicUrl,
             created_at: file.created_at,
           };
@@ -93,7 +93,7 @@ const MediaPage: React.FC = () => {
       setFileToUpload(null);
       setIsUploadDialogOpen(false);
       if (fileInputRef.current) {
-        fileInputRef.current.value = ''; // Clear the file input
+        fileInputRef.current.value = '';
       }
     },
     onError: (error) => {
@@ -167,7 +167,7 @@ const MediaPage: React.FC = () => {
     return <p className="text-red-500">Erro ao carregar arquivos de mídia: {mediaError.message}</p>;
   }
 
-  if (!canManageMedia && currentUserRole !== 'member') { // 'member' role can view, but not manage
+  if (!canManageMedia && currentUserRole !== 'member') {
     return (
       <Card className="w-full">
         <CardHeader>

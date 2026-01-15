@@ -2,14 +2,14 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"; // Added Navigate
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import { SessionContextProvider } from "./contexts/SessionContext";
 import ProtectedRoute from "./components/ProtectedRoute";
-import AdminLayout from "./components/AdminLayout"; // Import AdminLayout
-import AdminDashboardContent from "./pages/admin/DashboardContent"; // Import the new dashboard content
+import AdminLayout from "./components/AdminLayout";
+import AdminDashboardContent from "./pages/admin/DashboardContent";
 import UsersPage from "./pages/admin/UsersPage";
 import MembersPage from "./pages/admin/MembersPage";
 import DepartmentsPage from "./pages/admin/DepartmentsPage";
@@ -31,16 +31,15 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
-            <Route 
-              path="/admin/*" 
+            <Route
+              path="/admin/*"
               element={
                 <ProtectedRoute>
-                  <AdminLayout /> {/* AdminLayout is the main layout for all admin sub-routes */}
+                  <AdminLayout />
                 </ProtectedRoute>
-              } 
+              }
             >
-              {/* Nested routes for AdminLayout */}
-              <Route index element={<AdminDashboardContent />} /> {/* Default admin page */}
+              <Route index element={<AdminDashboardContent />} />
               <Route path="dashboard" element={<AdminDashboardContent />} />
               <Route path="users" element={<UsersPage />} />
               <Route path="members" element={<MembersPage />} />
@@ -50,9 +49,8 @@ const App = () => (
               <Route path="media" element={<MediaPage />} />
               <Route path="bible" element={<BiblePage />} />
               <Route path="settings" element={<SettingsPage />} />
-              <Route path="*" element={<Navigate to="/admin" replace />} /> {/* Catch-all for admin sub-routes */}
+              <Route path="*" element={<Navigate to="/admin" replace />} />
             </Route>
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </SessionContextProvider>
