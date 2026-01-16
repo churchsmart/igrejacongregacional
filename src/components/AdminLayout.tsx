@@ -1,5 +1,5 @@
 import React from 'react';
-import { Outlet, Link } from 'react-router-dom'; // Added Link import
+import { Outlet, Link } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import { useChurchSettings } from '@/hooks/useChurchSettings';
 import { Loader2 } from 'lucide-react';
