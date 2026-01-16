@@ -35,6 +35,7 @@ const navItems: NavItem[] = [
   { href: "/admin/schedules", label: "Escalas", icon: Calendar, roles: ['master', 'admin', 'leader', 'editor'] },
   { href: "/admin/events", label: "Eventos", icon: Calendar, roles: ['master', 'admin', 'editor'] },
   { href: "/admin/media", label: "Mídia", icon: Image, roles: ['master', 'admin', 'editor'] },
+  { href: "/admin/galleries", label: "Galerias", icon: Image, roles: ['master', 'admin', 'editor'] },
   { href: "/admin/bible", label: "Bíblia", icon: BookOpenText, roles: ['master', 'admin', 'editor'] },
   { href: "/admin/settings", label: "Configurações", icon: Settings, roles: ['master', 'admin'] },
 ];
