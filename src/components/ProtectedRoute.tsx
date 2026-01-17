@@ -25,7 +25,6 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   }
 
   if (!session) {
-    console.log("[ProtectedRoute] No session, redirecting to login");
     return <Navigate to="/login" replace />;
   }
 

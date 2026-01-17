@@ -5,13 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Loader2, Edit } from 'lucide-react';
 import { useChurchSettings } from '@/hooks/useChurchSettings';
 import { useUserRole } from '@/hooks/useUserRole';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import ChurchSettingsForm from '@/components/ChurchSettingsForm';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -35,38 +29,38 @@ const SettingsPage: React.FC = () => {
 
   const updateSettingsMutation = useMutation({
     mutationFn: async (updatedSettings: Omit<ChurchSettings, 'id' | 'updated_at' | 'social_links'>) => {
-      console.log("[SettingsPage] Updating settings:", updatedSettings);
-      
       if (!settings?.id) {
-        // If no settings exist, create them
+        // Criar configurações se não existirem
         const { data, error } = await supabase
           .from('church_settings')
-          .insert({ ...updatedSettings, updated_at: new Date().toISOString() })
+          .insert({
+            ...updatedSettings,
+            updated_at: new Date().toISOString()
+          })
           .select()
           .single();
-
+        
         if (error) {
-          console.error("[SettingsPage] Error creating settings:", error);
           throw new Error(error.message);
         }
         
-        console.log("[SettingsPage] Settings created:", data);
         return data;
       } else {
-        // Otherwise, update existing settings
+        // Atualizar configurações existentes
         const { data, error } = await supabase
           .from('church_settings')
-          .update({ ...updatedSettings, updated_at: new Date().toISOString() })
+          .update({
+            ...updatedSettings,
+            updated_at: new Date().toISOString()
+          })
           .eq('id', settings.id)
           .select()
           .single();
-
+        
         if (error) {
-          console.error("[SettingsPage] Error updating settings:", error);
           throw new Error(error.message);
         }
         
-        console.log("[SettingsPage] Settings updated:", data);
         return data;
       }
     },
@@ -77,12 +71,10 @@ const SettingsPage: React.FC = () => {
     },
     onError: (err) => {
       toast.error('Erro ao atualizar configurações: ' + err.message);
-      console.error("[SettingsPage] Update settings error:", err);
     },
   });
 
   const handleFormSubmit = (values: any) => {
-    console.log("[SettingsPage] Form submitted:", values);
     updateSettingsMutation.mutate(values);
   };
 
@@ -139,22 +131,20 @@ const SettingsPage: React.FC = () => {
           <p className="text-gray-500">Nenhuma configuração encontrada. Clique em "Editar Configurações" para adicionar.</p>
         )}
       </CardContent>
-
+      
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>{settings ? 'Editar Configurações da Igreja' : 'Adicionar Configurações da Igreja'}</DialogTitle>
             <DialogDescription>
-              {settings
-                ? 'Atualize as informações gerais da sua igreja.'
-                : 'Adicione as informações iniciais da sua igreja.'}
+              {settings ? 'Atualize as informações gerais da sua igreja.' : 'Adicione as informações iniciais da sua igreja.'}
             </DialogDescription>
           </DialogHeader>
-          <ChurchSettingsForm
-            initialData={settings || undefined}
-            onSubmit={handleFormSubmit}
-            onCancel={() => setIsFormOpen(false)}
-            isSubmitting={updateSettingsMutation.isPending}
+          <ChurchSettingsForm 
+            initialData={settings || undefined} 
+            onSubmit={handleFormSubmit} 
+            onCancel={() => setIsFormOpen(false)} 
+            isSubmitting={updateSettingsMutation.isPending} 
           />
         </DialogContent>
       </Dialog>

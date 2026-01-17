@@ -17,29 +17,26 @@ export const useChurchSettings = () => {
   const { data, isLoading, error } = useQuery<ChurchSettings[], Error>({
     queryKey: ['churchSettings'],
     queryFn: async () => {
-      console.log("[useChurchSettings] Fetching church settings");
       const { data, error } = await supabase
         .from('church_settings')
         .select('*')
-        .limit(1); // Assuming there's only one global settings entry
-
+        .limit(1);
+      
       if (error) {
-        console.error("[useChurchSettings] Error fetching settings:", error);
         throw new Error(error.message);
       }
-
-      console.log("[useChurchSettings] Settings fetched:", data);
+      
       return data;
     },
   });
 
-  const settings = data?.[0]; // Get the first (and only) settings object
+  const settings = data?.[0];
 
   useEffect(() => {
     if (settings?.church_name) {
       document.title = settings.church_name;
     } else {
-      document.title = "Dyad Church App";
+      document.title = "Igreja App";
     }
   }, [settings?.church_name]);
 

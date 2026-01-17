@@ -14,13 +14,6 @@ interface BibleBook {
   chapters: number;
 }
 
-interface BibleChapter {
-  id: string;
-  book_id: string;
-  chapter_number: number;
-  verses: BibleVerse[];
-}
-
 interface BibleVerse {
   verse_number: number;
   text: string;
@@ -67,7 +60,6 @@ const BIBLE_BOOKS: BibleBook[] = [
   { id: 'hag', name: 'Ageu', testament: 'old', chapters: 2 },
   { id: 'zec', name: 'Zacarias', testament: 'old', chapters: 14 },
   { id: 'mal', name: 'Malaquias', testament: 'old', chapters: 4 },
-
   // New Testament
   { id: 'mat', name: 'Mateus', testament: 'new', chapters: 28 },
   { id: 'mrk', name: 'Marcos', testament: 'new', chapters: 16 },
@@ -101,9 +93,9 @@ const BIBLE_BOOKS: BibleBook[] = [
 const BiblePage: React.FC = () => {
   const { role: currentUserRole, isLoading: roleLoading } = useUserRole();
   const { toast } = useToast();
-  const [selectedBook, setSelectedBook] = useState<BibleBook>(BIBLE_BOOKS[0]); // Start with Genesis
+  const [selectedBook, setSelectedBook] = useState<BibleBook>(BIBLE_BOOKS[0]);
   const [selectedChapter, setSelectedChapter] = useState<number>(1);
-  const [chapterContent, setChapterContent] = useState<BibleChapter | null>(null);
+  const [chapterContent, setChapterContent] = useState<BibleVerse[] | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState<boolean>(false);
@@ -111,24 +103,17 @@ const BiblePage: React.FC = () => {
   const [readingPlan, setReadingPlan] = useState<any[]>([]);
   const [currentReadingPlanDay, setCurrentReadingPlanDay] = useState<number>(0);
 
-  // Fetch chapter content when book or chapter changes
+  // Carregar conteúdo do capítulo
   useEffect(() => {
     const fetchChapterContent = async () => {
       setIsLoading(true);
       try {
-        // In a real implementation, this would call a Bible API
-        // For now, we'll simulate the response with placeholder data
+        // Simulação de conteúdo bíblico (em produção, isso viria de uma API real)
         const mockVerses: BibleVerse[] = Array.from({ length: 30 }, (_, i) => ({
           verse_number: i + 1,
           text: `Este é o versículo ${i + 1} de ${selectedBook.name} ${selectedChapter}. Texto simulado para demonstração.`,
         }));
-
-        setChapterContent({
-          id: `${selectedBook.id}_${selectedChapter}`,
-          book_id: selectedBook.id,
-          chapter_number: selectedChapter,
-          verses: mockVerses,
-        });
+        setChapterContent(mockVerses);
       } catch (error) {
         console.error('Error fetching chapter content:', error);
         toast({
@@ -144,21 +129,20 @@ const BiblePage: React.FC = () => {
     fetchChapterContent();
   }, [selectedBook, selectedChapter, toast]);
 
-  // Generate a simple reading plan
+  // Gerar plano de leitura
   useEffect(() => {
     const generateReadingPlan = () => {
       const plan = [];
       let currentBookIndex = 0;
       let currentChapter = 1;
 
-      // Generate a 30-day reading plan
+      // Gerar plano de 30 dias
       for (let day = 1; day <= 30; day++) {
         const book = BIBLE_BOOKS[currentBookIndex];
         if (currentChapter > book.chapters) {
           currentBookIndex++;
           currentChapter = 1;
         }
-
         if (currentBookIndex >= BIBLE_BOOKS.length) break;
 
         plan.push({
@@ -167,10 +151,8 @@ const BiblePage: React.FC = () => {
           chapter: currentChapter,
           reference: `${BIBLE_BOOKS[currentBookIndex].name} ${currentChapter}`,
         });
-
         currentChapter++;
       }
-
       setReadingPlan(plan);
     };
 
@@ -179,11 +161,9 @@ const BiblePage: React.FC = () => {
 
   const handleSearch = async () => {
     if (!searchQuery.trim()) return;
-
     setIsSearching(true);
     try {
-      // In a real implementation, this would call a Bible search API
-      // For now, we'll simulate search results
+      // Simulação de busca (em produção, isso viria de uma API real)
       const mockResults = [
         {
           reference: 'João 3:16',
@@ -207,7 +187,6 @@ const BiblePage: React.FC = () => {
           verse: 13,
         },
       ];
-
       setSearchResults(mockResults);
     } catch (error) {
       console.error('Error searching Bible:', error);
@@ -235,7 +214,7 @@ const BiblePage: React.FC = () => {
     if (selectedChapter > 1) {
       setSelectedChapter(selectedChapter - 1);
     } else {
-      // Go to previous book
+      // Ir para o livro anterior
       const currentIndex = BIBLE_BOOKS.findIndex(b => b.id === selectedBook.id);
       if (currentIndex > 0) {
         setSelectedBook(BIBLE_BOOKS[currentIndex - 1]);
@@ -249,7 +228,7 @@ const BiblePage: React.FC = () => {
     if (currentBook && selectedChapter < currentBook.chapters) {
       setSelectedChapter(selectedChapter + 1);
     } else {
-      // Go to next book
+      // Ir para o próximo livro
       const currentIndex = BIBLE_BOOKS.findIndex(b => b.id === selectedBook.id);
       if (currentIndex < BIBLE_BOOKS.length - 1) {
         setSelectedBook(BIBLE_BOOKS[currentIndex + 1]);
@@ -293,12 +272,11 @@ const BiblePage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Bible Navigation and Reading */}
+      {/* Navegação e Leitura Bíblica */}
       <Card>
         <CardHeader>
           <CardTitle className="text-2xl font-bold flex items-center gap-2">
-            <BookOpen className="h-6 w-6" />
-            Leitura Bíblica
+            <BookOpen className="h-6 w-6" /> Leitura Bíblica
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -308,8 +286,8 @@ const BiblePage: React.FC = () => {
                 <label htmlFor="book-select" className="block text-sm font-medium text-gray-700 mb-1">
                   Livro
                 </label>
-                <Select
-                  value={selectedBook.id}
+                <Select 
+                  value={selectedBook.id} 
                   onValueChange={(value) => {
                     const book = BIBLE_BOOKS.find(b => b.id === value);
                     if (book) setSelectedBook(book);
@@ -336,13 +314,12 @@ const BiblePage: React.FC = () => {
                   </SelectContent>
                 </Select>
               </div>
-
               <div className="flex-1">
                 <label htmlFor="chapter-select" className="block text-sm font-medium text-gray-700 mb-1">
                   Capítulo
                 </label>
-                <Select
-                  value={selectedChapter.toString()}
+                <Select 
+                  value={selectedChapter.toString()} 
                   onValueChange={(value) => setSelectedChapter(parseInt(value))}
                 >
                   <SelectTrigger id="chapter-select" className="w-full">
@@ -357,27 +334,26 @@ const BiblePage: React.FC = () => {
                   </SelectContent>
                 </Select>
               </div>
-
               <div className="flex gap-2">
-                <Button
-                  onClick={goToPreviousChapter}
-                  variant="outline"
-                  size="icon"
+                <Button 
+                  onClick={goToPreviousChapter} 
+                  variant="outline" 
+                  size="icon" 
                   className="h-10 w-10"
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
-                <Button
-                  onClick={goToNextChapter}
-                  variant="outline"
-                  size="icon"
+                <Button 
+                  onClick={goToNextChapter} 
+                  variant="outline" 
+                  size="icon" 
                   className="h-10 w-10"
                 >
                   <ChevronRight className="h-4 w-4" />
                 </Button>
               </div>
             </div>
-
+            
             {isLoading ? (
               <div className="flex items-center justify-center py-8">
                 <Loader2 className="h-6 w-6 animate-spin text-primary" />
@@ -388,7 +364,7 @@ const BiblePage: React.FC = () => {
                   {selectedBook.name} {selectedChapter}
                 </h3>
                 <div className="space-y-3 text-justify">
-                  {chapterContent.verses.map((verse) => (
+                  {chapterContent.map((verse) => (
                     <p key={verse.verse_number} className="text-sm">
                       <sup className="text-primary font-medium">{verse.verse_number}</sup> {verse.text}
                     </p>
@@ -402,45 +378,45 @@ const BiblePage: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Bible Search */}
+      {/* Busca Bíblica */}
       <Card>
         <CardHeader>
           <CardTitle className="text-xl font-bold flex items-center gap-2">
-            <Search className="h-5 w-5" />
-            Busca Bíblica
+            <Search className="h-5 w-5" /> Busca Bíblica
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             <div className="flex gap-2">
-              <Input
-                placeholder="Buscar versículos, palavras-chave, referências..."
-                value={searchQuery}
+              <Input 
+                placeholder="Buscar versículos, palavras-chave, referências..." 
+                value={searchQuery} 
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
               />
-              <Button onClick={handleSearch} disabled={isSearching || !searchQuery.trim()}>
+              <Button 
+                onClick={handleSearch} 
+                disabled={isSearching || !searchQuery.trim()}
+              >
                 {isSearching ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Buscando...
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Buscando...
                   </>
                 ) : (
                   <>
-                    <Search className="mr-2 h-4 w-4" />
-                    Buscar
+                    <Search className="mr-2 h-4 w-4" /> Buscar
                   </>
                 )}
               </Button>
             </div>
-
+            
             {searchResults.length > 0 && (
               <div className="space-y-3">
                 <h4 className="font-medium">Resultados da busca:</h4>
                 <div className="space-y-2">
                   {searchResults.map((result, index) => (
-                    <div
-                      key={index}
+                    <div 
+                      key={index} 
                       className="p-3 border rounded-lg hover:bg-muted/50 cursor-pointer"
                       onClick={() => navigateToReference(result.book, result.chapter)}
                     >
@@ -455,7 +431,7 @@ const BiblePage: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Reading Plan */}
+      {/* Plano de Leitura */}
       <Card>
         <CardHeader>
           <CardTitle className="text-xl font-bold">Plano de Leitura</CardTitle>
@@ -465,10 +441,10 @@ const BiblePage: React.FC = () => {
             <div className="flex items-center justify-between">
               <h4 className="font-medium">Plano de Leitura de 30 Dias</h4>
               <div className="flex gap-2">
-                <Button
-                  onClick={goToPreviousReadingDay}
-                  variant="outline"
-                  size="icon"
+                <Button 
+                  onClick={goToPreviousReadingDay} 
+                  variant="outline" 
+                  size="icon" 
                   disabled={currentReadingPlanDay === 0}
                 >
                   <ArrowLeft className="h-4 w-4" />
@@ -476,20 +452,20 @@ const BiblePage: React.FC = () => {
                 <span className="font-medium">
                   Dia {currentReadingPlanDay + 1} de {readingPlan.length}
                 </span>
-                <Button
-                  onClick={goToNextReadingDay}
-                  variant="outline"
-                  size="icon"
+                <Button 
+                  onClick={goToNextReadingDay} 
+                  variant="outline" 
+                  size="icon" 
                   disabled={currentReadingPlanDay === readingPlan.length - 1}
                 >
                   <ArrowRight className="h-4 w-4" />
                 </Button>
               </div>
             </div>
-
+            
             {readingPlan.length > 0 && (
               <div className="space-y-2">
-                <div
+                <div 
                   className="p-4 border rounded-lg bg-muted/50 hover:bg-muted cursor-pointer"
                   onClick={() => {
                     const reading = readingPlan[currentReadingPlanDay];
@@ -501,12 +477,11 @@ const BiblePage: React.FC = () => {
                     {readingPlan[currentReadingPlanDay].reference}
                   </p>
                 </div>
-
                 <div className="space-y-1">
                   <h5 className="font-medium">Próximas leituras:</h5>
                   {readingPlan.slice(currentReadingPlanDay + 1, currentReadingPlanDay + 6).map((day, index) => (
-                    <div
-                      key={index}
+                    <div 
+                      key={index} 
                       className="p-2 text-sm hover:bg-muted/50 rounded cursor-pointer"
                       onClick={() => {
                         setCurrentReadingPlanDay(currentReadingPlanDay + index + 1);

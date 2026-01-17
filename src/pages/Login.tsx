@@ -15,7 +15,7 @@ const Login: React.FC = () => {
         <CardContent>
           <Auth
             supabaseClient={supabase}
-            providers={[]} // No social logins as per requirements
+            providers={[]} // Sem login social
             appearance={{
               theme: ThemeSupa,
               variables: {
@@ -28,9 +28,9 @@ const Login: React.FC = () => {
               },
             }}
             theme="light"
-            redirectTo={window.location.origin + '/admin'} // Redirect to admin after login
-            magicLink={false} // Only email/password
-            showLinks={false} // No public sign-up link for admin
+            redirectTo={window.location.origin + '/admin'}
+            magicLink={false}
+            showLinks={false} // Sem cadastro público
           />
         </CardContent>
       </Card>

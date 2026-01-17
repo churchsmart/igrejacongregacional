@@ -4,22 +4,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from '@/components/ui/dialog';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Loader2, UploadCloud, Trash2, FileText, Image as ImageIcon, ChevronLeft, PlusCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { useUserRole } from '@/hooks/useUserRole';
@@ -52,7 +38,7 @@ const MediaPage: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { role: currentUserRole, isLoading: roleLoading } = useUserRole();
 
-  // Get gallery ID from URL params
+  // Obter ID da galeria dos parâmetros da URL
   useEffect(() => {
     const galleryId = searchParams.get('gallery');
     if (galleryId) {
@@ -69,10 +55,11 @@ const MediaPage: React.FC = () => {
         .from('galleries')
         .select('id, title')
         .order('title', { ascending: true });
-
+      
       if (error) {
         throw new Error(error.message);
       }
+      
       return data;
     },
     enabled: !roleLoading && (currentUserRole === 'master' || currentUserRole === 'admin' || currentUserRole === 'editor' || currentUserRole === 'member'),
@@ -81,48 +68,48 @@ const MediaPage: React.FC = () => {
   const { data: mediaFiles, isLoading: mediaLoading, error: mediaError } = useQuery<MediaFile[], Error>({
     queryKey: ['mediaFiles', currentGalleryId],
     queryFn: async () => {
-      let path = '';
       if (currentGalleryId) {
-        // Get images for specific gallery
+        // Obter imagens de uma galeria específica
         const { data: galleryImages, error: galleryImagesError } = await supabase
           .from('gallery_images')
           .select('image_url')
           .eq('gallery_id', currentGalleryId);
-
+        
         if (galleryImagesError) {
           throw new Error(galleryImagesError.message);
         }
 
-        // Extract filenames from URLs and get their metadata
+        // Extrair nomes dos arquivos das URLs e obter seus metadados
         const filesWithUrls = await Promise.all(
           galleryImages.map(async (item) => {
             const filename = item.image_url.split('/').pop();
             if (!filename) return null;
-
-            const { data: publicUrlData } = supabase.storage.from(BUCKET_NAME).getPublicUrl(`galleries/${filename}`);
+            
+            const { data: publicUrlData } = supabase.storage.from(BUCKET_NAME).getPublicUrl(`galleries/${currentGalleryId}/${filename}`);
+            
             return {
               name: filename,
               id: filename,
               url: publicUrlData.publicUrl,
-              created_at: new Date().toISOString(), // Would need to store this in DB for accuracy
+              created_at: new Date().toISOString(), // Em produção, isso viria do banco
             };
           })
         );
-
+        
         return filesWithUrls.filter(Boolean) as MediaFile[];
       } else {
-        // Get all files from media bucket (for general media management)
+        // Obter todos os arquivos do bucket de mídia
         const { data, error } = await supabase.storage.from(BUCKET_NAME).list('', {
           limit: 100,
           offset: 0,
           sortBy: { column: 'created_at', order: 'desc' },
         });
-
+        
         if (error) {
           throw new Error(error.message);
         }
 
-        // For each file, get its public URL
+        // Para cada arquivo, obter sua URL pública
         const filesWithUrls = await Promise.all(
           data.map(async (file) => {
             const { data: publicUrlData } = supabase.storage.from(BUCKET_NAME).getPublicUrl(file.name);
@@ -134,6 +121,7 @@ const MediaPage: React.FC = () => {
             };
           })
         );
+        
         return filesWithUrls;
       }
     },
@@ -148,19 +136,19 @@ const MediaPage: React.FC = () => {
       } else {
         path = `${Date.now()}_${file.name}`;
       }
-
+      
       const { data, error } = await supabase.storage
         .from(BUCKET_NAME)
         .upload(path, file, {
           cacheControl: '3600',
           upsert: false,
         });
-
+      
       if (error) {
         throw new Error(error.message);
       }
 
-      // If uploading to a gallery, also create the gallery_images record
+      // Se estiver enviando para uma galeria, também criar o registro em gallery_images
       if (currentGalleryId) {
         const { error: dbError } = await supabase
           .from('gallery_images')
@@ -168,12 +156,12 @@ const MediaPage: React.FC = () => {
             gallery_id: currentGalleryId,
             image_url: `${BUCKET_NAME}/${path}`,
           });
-
+        
         if (dbError) {
           throw new Error(dbError.message);
         }
       }
-
+      
       return data;
     },
     onSuccess: () => {
@@ -187,33 +175,33 @@ const MediaPage: React.FC = () => {
     },
     onError: (error) => {
       toast.error('Erro ao enviar arquivo: ' + error.message);
-      console.error("[MediaPage] Upload file error:", error);
     },
   });
 
   const deleteFileMutation = useMutation({
     mutationFn: async (fileName: string) => {
-      // If in gallery mode, delete from gallery_images first
+      // Se estiver em modo de galeria, deletar primeiro de gallery_images
       if (currentGalleryId) {
         const { error: dbError } = await supabase
           .from('gallery_images')
           .delete()
           .eq('image_url', `${BUCKET_NAME}/galleries/${currentGalleryId}/${fileName}`);
-
+        
         if (dbError) {
           throw new Error(dbError.message);
         }
       }
 
-      // Delete the actual file from storage
+      // Deletar o arquivo real do storage
       const path = currentGalleryId ? `galleries/${currentGalleryId}/${fileName}` : fileName;
       const { data, error } = await supabase.storage
         .from(BUCKET_NAME)
         .remove([path]);
-
+      
       if (error) {
         throw new Error(error.message);
       }
+      
       return data;
     },
     onSuccess: () => {
@@ -224,7 +212,6 @@ const MediaPage: React.FC = () => {
     },
     onError: (error) => {
       toast.error('Erro ao excluir arquivo: ' + error.message);
-      console.error("[MediaPage] Delete file error:", error);
     },
   });
 
@@ -346,7 +333,7 @@ const MediaPage: React.FC = () => {
               Gerencie as imagens desta galeria.
             </p>
           )}
-
+          
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
@@ -362,9 +349,7 @@ const MediaPage: React.FC = () => {
                 {mediaFiles?.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={5} className="h-24 text-center">
-                      {currentGalleryId
-                        ? 'Nenhuma imagem encontrada nesta galeria.'
-                        : 'Nenhum arquivo de mídia encontrado.'}
+                      {currentGalleryId ? 'Nenhuma imagem encontrada nesta galeria.' : 'Nenhum arquivo de mídia encontrado.'}
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -386,9 +371,9 @@ const MediaPage: React.FC = () => {
                       <TableCell>{format(new Date(file.created_at), 'dd/MM/yyyy HH:mm')}</TableCell>
                       <TableCell className="text-right">
                         {canDeleteMedia && (
-                          <Button
-                            variant="ghost"
-                            size="icon"
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
                             onClick={() => openDeleteDialog(file)}
                             disabled={deleteFileMutation.isPending}
                           >
@@ -406,33 +391,40 @@ const MediaPage: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Upload Dialog */}
+      {/* Diálogo de Upload */}
       <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Enviar Novo Arquivo de Mídia</DialogTitle>
             <DialogDescription>
-              {currentGalleryId
-                ? `Selecione um arquivo para adicionar à galeria.`
-                : `Selecione um arquivo do seu computador para fazer upload.`}
+              {currentGalleryId ? 
+                `Selecione um arquivo para adicionar à galeria.` : 
+                `Selecione um arquivo do seu computador para fazer upload.`}
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            <Input
-              id="mediaFile"
-              type="file"
-              onChange={handleFileChange}
-              ref={fileInputRef}
+            <Input 
+              id="mediaFile" 
+              type="file" 
+              onChange={handleFileChange} 
+              ref={fileInputRef} 
             />
             {fileToUpload && (
               <p className="text-sm text-muted-foreground">Arquivo selecionado: {fileToUpload.name}</p>
             )}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsUploadDialogOpen(false)} disabled={uploadFileMutation.isPending}>
+            <Button 
+              variant="outline" 
+              onClick={() => setIsUploadDialogOpen(false)}
+              disabled={uploadFileMutation.isPending}
+            >
               Cancelar
             </Button>
-            <Button onClick={handleUploadClick} disabled={!fileToUpload || uploadFileMutation.isPending}>
+            <Button 
+              onClick={handleUploadClick} 
+              disabled={!fileToUpload || uploadFileMutation.isPending}
+            >
               {uploadFileMutation.isPending ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (
@@ -444,7 +436,7 @@ const MediaPage: React.FC = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation Dialog */}
+      {/* Diálogo de Confirmação de Exclusão */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -454,10 +446,18 @@ const MediaPage: React.FC = () => {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)} disabled={deleteFileMutation.isPending}>
+            <Button 
+              variant="outline" 
+              onClick={() => setIsDeleteDialogOpen(false)}
+              disabled={deleteFileMutation.isPending}
+            >
               Cancelar
             </Button>
-            <Button variant="destructive" onClick={handleDeleteConfirm} disabled={deleteFileMutation.isPending}>
+            <Button 
+              variant="destructive" 
+              onClick={handleDeleteConfirm}
+              disabled={deleteFileMutation.isPending}
+            >
               {deleteFileMutation.isPending ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (

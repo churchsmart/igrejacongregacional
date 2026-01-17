@@ -3,39 +3,22 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from '@/components/ui/dialog';
-import { Loader2, PlusCircle, Edit, Trash2, MoreHorizontal } from 'lucide-react';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Loader2, PlusCircle, Edit, Trash2, MoreHorizontal, Users } from 'lucide-react';
 import { toast } from 'sonner';
 import EventForm from '@/components/EventForm';
 import { useUserRole } from '@/hooks/useUserRole';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { format } from 'date-fns';
 import { useSession } from '@/contexts/SessionContext';
+import { ptBR } from 'date-fns/locale';
 
 interface Event {
   id: string;
   title: string;
   description?: string;
-  event_date: string; // ISO string
+  event_date: string;
   start_time?: string;
   end_time?: string;
   location?: string;
@@ -43,6 +26,7 @@ interface Event {
   created_by?: string;
   created_at: string;
   updated_at: string;
+  attendee_count?: number;
 }
 
 const EventsPage: React.FC = () => {
@@ -55,44 +39,58 @@ const EventsPage: React.FC = () => {
   const { data: events, isLoading: eventsLoading, error: eventsError } = useQuery<Event[], Error>({
     queryKey: ['events'],
     queryFn: async () => {
-      console.log("[EventsPage] Fetching events");
-      const { data, error } = await supabase
+      // Obter eventos com contagem de participantes
+      const { data: eventsData, error: eventsError } = await supabase
         .from('events')
         .select('*')
         .order('event_date', { ascending: true })
         .order('start_time', { ascending: true });
-
-      if (error) {
-        console.error("[EventsPage] Error fetching events:", error);
-        throw new Error(error.message);
-      }
       
-      console.log("[EventsPage] Events fetched:", data);
-      return data;
+      if (eventsError) {
+        throw new Error(eventsError.message);
+      }
+
+      // Contar participantes para cada evento
+      const eventsWithCounts = await Promise.all(
+        eventsData.map(async (event) => {
+          const { count, error: countError } = await supabase
+            .from('event_attendees')
+            .select('*', { count: 'exact', head: true })
+            .eq('event_id', event.id)
+            .eq('is_attending', true);
+          
+          if (countError) {
+            console.error(`Error counting attendees for event ${event.id}:`, countError.message);
+            return { ...event, attendee_count: 0 };
+          }
+          
+          return { ...event, attendee_count: count || 0 };
+        })
+      );
+      
+      return eventsWithCounts;
     },
     enabled: !roleLoading && (currentUserRole === 'master' || currentUserRole === 'admin' || currentUserRole === 'editor' || currentUserRole === 'member'),
   });
 
   const createEventMutation = useMutation({
-    mutationFn: async (newEvent: Omit<Event, 'id' | 'created_at' | 'updated_at' | 'created_by'>) => {
-      if (!currentUser?.id) throw new Error("User not authenticated.");
-      console.log("[EventsPage] Creating event:", newEvent);
+    mutationFn: async (newEvent: Omit<Event, 'id' | 'created_at' | 'updated_at' | 'created_by' | 'attendee_count'>) => {
+      if (!currentUser?.id) throw new Error("Usuário não autenticado.");
+      
       const { data, error } = await supabase
         .from('events')
         .insert({
           ...newEvent,
-          event_date: format(newEvent.event_date, 'yyyy-MM-dd'),
+          event_date: format(new Date(newEvent.event_date), 'yyyy-MM-dd'),
           created_by: currentUser.id,
         })
         .select()
         .single();
-
+      
       if (error) {
-        console.error("[EventsPage] Error creating event:", error);
         throw new Error(error.message);
       }
       
-      console.log("[EventsPage] Event created:", data);
       return data;
     },
     onSuccess: () => {
@@ -103,14 +101,13 @@ const EventsPage: React.FC = () => {
     },
     onError: (error) => {
       toast.error('Erro ao criar evento: ' + error.message);
-      console.error("[EventsPage] Create event error:", error);
     },
   });
 
   const updateEventMutation = useMutation({
-    mutationFn: async (updatedEvent: Omit<Event, 'created_at' | 'updated_at' | 'created_by'>) => {
-      console.log("[EventsPage] Updating event:", updatedEvent);
+    mutationFn: async (updatedEvent: Omit<Event, 'created_at' | 'updated_at' | 'created_by' | 'attendee_count'>) => {
       const { id, event_date, ...rest } = updatedEvent;
+      
       const { data, error } = await supabase
         .from('events')
         .update({
@@ -121,13 +118,11 @@ const EventsPage: React.FC = () => {
         .eq('id', id)
         .select()
         .single();
-
+      
       if (error) {
-        console.error("[EventsPage] Error updating event:", error);
         throw new Error(error.message);
       }
       
-      console.log("[EventsPage] Event updated:", data);
       return data;
     },
     onSuccess: () => {
@@ -138,24 +133,20 @@ const EventsPage: React.FC = () => {
     },
     onError: (error) => {
       toast.error('Erro ao atualizar evento: ' + error.message);
-      console.error("[EventsPage] Update event error:", error);
     },
   });
 
   const deleteEventMutation = useMutation({
     mutationFn: async (eventId: string) => {
-      console.log("[EventsPage] Deleting event:", eventId);
       const { error } = await supabase
         .from('events')
         .delete()
         .eq('id', eventId);
-
+      
       if (error) {
-        console.error("[EventsPage] Error deleting event:", error);
         throw new Error(error.message);
       }
       
-      console.log("[EventsPage] Event deleted:", eventId);
       return eventId;
     },
     onSuccess: () => {
@@ -164,12 +155,10 @@ const EventsPage: React.FC = () => {
     },
     onError: (error) => {
       toast.error('Erro ao excluir evento: ' + error.message);
-      console.error("[EventsPage] Delete event error:", error);
     },
   });
 
   const handleFormSubmit = (values: any) => {
-    console.log("[EventsPage] Form submitted:", values);
     if (editingEvent) {
       updateEventMutation.mutate({ ...values, id: editingEvent.id });
     } else {
@@ -235,6 +224,7 @@ const EventsPage: React.FC = () => {
         <p className="text-gray-600 dark:text-gray-400 mb-4">
           Agenda da igreja com datas e descrições de eventos.
         </p>
+        
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
@@ -243,13 +233,14 @@ const EventsPage: React.FC = () => {
                 <TableHead>Data</TableHead>
                 <TableHead>Hora</TableHead>
                 <TableHead>Local</TableHead>
+                <TableHead>Confirmados</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {events?.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="h-24 text-center">
+                  <TableCell colSpan={6} className="h-24 text-center">
                     Nenhum evento encontrado.
                   </TableCell>
                 </TableRow>
@@ -257,13 +248,19 @@ const EventsPage: React.FC = () => {
                 events?.map((event) => (
                   <TableRow key={event.id}>
                     <TableCell className="font-medium">{event.title}</TableCell>
-                    <TableCell>{format(new Date(event.event_date), 'dd/MM/yyyy')}</TableCell>
+                    <TableCell>{format(new Date(event.event_date), 'dd/MM/yyyy', { locale: ptBR })}</TableCell>
                     <TableCell>
-                      {event.start_time && event.end_time
-                        ? `${event.start_time} - ${event.end_time}`
-                        : event.start_time || event.end_time || 'N/A'}
+                      {event.start_time && event.end_time ? 
+                        `${event.start_time} - ${event.end_time}` : 
+                        event.start_time || event.end_time || 'N/A'}
                     </TableCell>
                     <TableCell>{event.location || 'N/A'}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center">
+                        <Users className="h-4 w-4 mr-1" />
+                        {event.attendee_count || 0}
+                      </div>
+                    </TableCell>
                     <TableCell className="text-right">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -292,26 +289,24 @@ const EventsPage: React.FC = () => {
             </TableBody>
           </Table>
         </div>
-
-        <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>{editingEvent ? 'Editar Evento' : 'Adicionar Novo Evento'}</DialogTitle>
-              <DialogDescription>
-                {editingEvent
-                  ? 'Faça alterações no evento aqui.'
-                  : 'Crie um novo evento para sua igreja.'}
-              </DialogDescription>
-            </DialogHeader>
-            <EventForm
-              initialData={editingEvent || undefined}
-              onSubmit={handleFormSubmit}
-              onCancel={() => setIsFormOpen(false)}
-              isSubmitting={createEventMutation.isPending || updateEventMutation.isPending}
-            />
-          </DialogContent>
-        </Dialog>
       </CardContent>
+      
+      <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>{editingEvent ? 'Editar Evento' : 'Adicionar Novo Evento'}</DialogTitle>
+            <DialogDescription>
+              {editingEvent ? 'Faça alterações no evento aqui.' : 'Crie um novo evento para sua igreja.'}
+            </DialogDescription>
+          </DialogHeader>
+          <EventForm 
+            initialData={editingEvent || undefined} 
+            onSubmit={handleFormSubmit} 
+            onCancel={() => setIsFormOpen(false)} 
+            isSubmitting={createEventMutation.isPending || updateEventMutation.isPending} 
+          />
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };

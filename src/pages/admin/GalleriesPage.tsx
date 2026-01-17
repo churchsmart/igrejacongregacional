@@ -3,31 +3,13 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from '@/components/ui/dialog';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Loader2, PlusCircle, Edit, Trash2, MoreHorizontal, Image as ImageIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import GalleryForm from '@/components/GalleryForm';
 import { useUserRole } from '@/hooks/useUserRole';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { format } from 'date-fns';
 import { Link } from 'react-router-dom';
 
@@ -35,7 +17,7 @@ interface Gallery {
   id: string;
   title: string;
   created_at: string;
-  image_count?: number; // Will be populated from gallery_images
+  image_count?: number;
 }
 
 const GalleriesPage: React.FC = () => {
@@ -47,33 +29,33 @@ const GalleriesPage: React.FC = () => {
   const { data: galleries, isLoading: galleriesLoading, error: galleriesError } = useQuery<Gallery[], Error>({
     queryKey: ['galleries'],
     queryFn: async () => {
-      // Get galleries
+      // Obter galerias
       const { data: galleriesData, error: galleriesError } = await supabase
         .from('galleries')
         .select('*')
         .order('created_at', { ascending: false });
-
+      
       if (galleriesError) {
         throw new Error(galleriesError.message);
       }
 
-      // Count images for each gallery
+      // Contar imagens para cada galeria
       const galleriesWithCounts = await Promise.all(
         galleriesData.map(async (gallery) => {
           const { count, error: countError } = await supabase
             .from('gallery_images')
             .select('*', { count: 'exact', head: true })
             .eq('gallery_id', gallery.id);
-
+          
           if (countError) {
-            console.error(`[GalleriesPage] Error counting images for gallery ${gallery.id}:`, countError.message);
+            console.error(`Error counting images for gallery ${gallery.id}:`, countError.message);
             return { ...gallery, image_count: 0 };
           }
-
+          
           return { ...gallery, image_count: count || 0 };
         })
       );
-
+      
       return galleriesWithCounts;
     },
     enabled: !roleLoading && (currentUserRole === 'master' || currentUserRole === 'admin' || currentUserRole === 'editor' || currentUserRole === 'member'),
@@ -86,10 +68,11 @@ const GalleriesPage: React.FC = () => {
         .insert(newGallery)
         .select()
         .single();
-
+      
       if (error) {
         throw new Error(error.message);
       }
+      
       return data;
     },
     onSuccess: () => {
@@ -100,7 +83,6 @@ const GalleriesPage: React.FC = () => {
     },
     onError: (error) => {
       toast.error('Erro ao criar galeria: ' + error.message);
-      console.error("[GalleriesPage] Create gallery error:", error);
     },
   });
 
@@ -112,10 +94,11 @@ const GalleriesPage: React.FC = () => {
         .eq('id', updatedGallery.id)
         .select()
         .single();
-
+      
       if (error) {
         throw new Error(error.message);
       }
+      
       return data;
     },
     onSuccess: () => {
@@ -126,31 +109,31 @@ const GalleriesPage: React.FC = () => {
     },
     onError: (error) => {
       toast.error('Erro ao atualizar galeria: ' + error.message);
-      console.error("[GalleriesPage] Update gallery error:", error);
     },
   });
 
   const deleteGalleryMutation = useMutation({
     mutationFn: async (galleryId: string) => {
-      // First delete all images in the gallery
+      // Primeiro deletar todas as imagens da galeria
       const { error: imagesError } = await supabase
         .from('gallery_images')
         .delete()
         .eq('gallery_id', galleryId);
-
+      
       if (imagesError) {
         throw new Error(imagesError.message);
       }
 
-      // Then delete the gallery itself
+      // Depois deletar a galeria em si
       const { error } = await supabase
         .from('galleries')
         .delete()
         .eq('id', galleryId);
-
+      
       if (error) {
         throw new Error(error.message);
       }
+      
       return galleryId;
     },
     onSuccess: () => {
@@ -159,13 +142,12 @@ const GalleriesPage: React.FC = () => {
     },
     onError: (error) => {
       toast.error('Erro ao excluir galeria: ' + error.message);
-      console.error("[GalleriesPage] Delete gallery error:", error);
     },
   });
 
   const handleFormSubmit = (values: any) => {
     if (editingGallery) {
-      updateGalleryMutation.mutate({ ...values, id: editingGallery.id });
+      updateGalleryMutation.mutate({ ...values, id: editingGallery.id, created_at: editingGallery.created_at });
     } else {
       createGalleryMutation.mutate(values);
     }
@@ -229,6 +211,7 @@ const GalleriesPage: React.FC = () => {
         <p className="text-gray-600 dark:text-gray-400 mb-4">
           Crie e gerencie galerias de imagens para eventos e atividades da igreja.
         </p>
+        
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
@@ -289,26 +272,24 @@ const GalleriesPage: React.FC = () => {
             </TableBody>
           </Table>
         </div>
-
-        <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>{editingGallery ? 'Editar Galeria' : 'Adicionar Nova Galeria'}</DialogTitle>
-              <DialogDescription>
-                {editingGallery
-                  ? 'Faça alterações na galeria aqui.'
-                  : 'Crie uma nova galeria para organizar suas imagens.'}
-              </DialogDescription>
-            </DialogHeader>
-            <GalleryForm
-              initialData={editingGallery || undefined}
-              onSubmit={handleFormSubmit}
-              onCancel={() => setIsFormOpen(false)}
-              isSubmitting={createGalleryMutation.isPending || updateGalleryMutation.isPending}
-            />
-          </DialogContent>
-        </Dialog>
       </CardContent>
+      
+      <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>{editingGallery ? 'Editar Galeria' : 'Adicionar Nova Galeria'}</DialogTitle>
+            <DialogDescription>
+              {editingGallery ? 'Faça alterações na galeria aqui.' : 'Crie uma nova galeria para organizar suas imagens.'}
+            </DialogDescription>
+          </DialogHeader>
+          <GalleryForm 
+            initialData={editingGallery || undefined} 
+            onSubmit={handleFormSubmit} 
+            onCancel={() => setIsFormOpen(false)} 
+            isSubmitting={createGalleryMutation.isPending || updateGalleryMutation.isPending} 
+          />
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };

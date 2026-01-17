@@ -20,29 +20,23 @@ export const SessionContextProvider: React.FC<{ children: React.ReactNode }> = (
   const location = useLocation();
 
   useEffect(() => {
-    console.log("[SessionContext] Initializing auth state listener");
-    
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, currentSession) => {
-        console.log("[SessionContext] Auth state change:", event, currentSession?.user?.id);
         setSession(currentSession);
         setUser(currentSession?.user || null);
         
         if (event === 'INITIAL_SESSION') {
-          console.log("[SessionContext] Initial session loaded");
           setLoading(false);
         } else if (event === 'SIGNED_IN') {
-          console.log("[SessionContext] User signed in");
           toast.success('Login realizado com sucesso!');
-          // Only redirect if user was on login page
+          // Redirecionar para admin apenas se estiver na página de login
           if (location.pathname === '/login') {
             navigate('/admin');
           }
           setLoading(false);
         } else if (event === 'SIGNED_OUT') {
-          console.log("[SessionContext] User signed out");
           toast.success('Logout realizado com sucesso.');
-          // Only redirect if user was in admin area
+          // Redirecionar para login apenas se estiver em área protegida
           if (location.pathname.startsWith('/admin')) {
             navigate('/login');
           }
@@ -53,14 +47,13 @@ export const SessionContextProvider: React.FC<{ children: React.ReactNode }> = (
       }
     );
 
-    // Fetch initial session
+    // Buscar sessão inicial
     supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
-      console.log("[SessionContext] Initial session fetch result:", !!initialSession);
       setSession(initialSession);
       setUser(initialSession?.user || null);
       setLoading(false);
       
-      // Redirect logic for initial load
+      // Redirecionamentos iniciais
       if (initialSession && location.pathname === '/login') {
         navigate('/admin');
       } else if (!initialSession && location.pathname.startsWith('/admin')) {
@@ -69,7 +62,6 @@ export const SessionContextProvider: React.FC<{ children: React.ReactNode }> = (
     });
 
     return () => {
-      console.log("[SessionContext] Cleaning up auth listener");
       subscription.unsubscribe();
     };
   }, [navigate, location.pathname]);
