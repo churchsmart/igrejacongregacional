@@ -2,16 +2,22 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import {
-  Users,
-  UserCog,
-  Briefcase,
-  Calendar,
-  Image,
-  Settings,
-  LogOut,
-  Menu,
+import { 
+  Users, 
+  UserCog, 
+  Briefcase, 
+  Calendar, 
+  Image, 
+  Settings, 
+  LogOut, 
+  Menu, 
   BookOpenText,
+  Heart,
+  Newspaper,
+  Bell,
+  User,
+  BookOpen,
+  Music
 } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -37,6 +43,12 @@ const navItems: NavItem[] = [
   { href: "/admin/media", label: "Mídia", icon: Image, roles: ['master', 'admin', 'editor'] },
   { href: "/admin/galleries", label: "Galerias", icon: Image, roles: ['master', 'admin', 'editor'] },
   { href: "/admin/bible", label: "Bíblia", icon: BookOpenText, roles: ['master', 'admin', 'editor', 'member'] },
+  { href: "/admin/psalms", label: "Salmos", icon: BookOpen, roles: ['master', 'admin', 'editor', 'member'] },
+  { href: "/admin/hymns", label: "Hinos", icon: Music, roles: ['master', 'admin', 'editor', 'member'] },
+  { href: "/admin/prayer-requests", label: "Mural de Oração", icon: Heart, roles: ['master', 'admin'] },
+  { href: "/admin/news", label: "Notícias", icon: Newspaper, roles: ['master', 'admin', 'editor'] },
+  { href: "/admin/notifications", label: "Notificações", icon: Bell, roles: ['master', 'admin'] },
+  { href: "/admin/profile", label: "Meu Perfil", icon: User, roles: ['master', 'admin', 'leader', 'editor', 'member'] },
   { href: "/admin/settings", label: "Configurações", icon: Settings, roles: ['master', 'admin'] },
 ];
 
@@ -64,17 +76,17 @@ const Sidebar: React.FC<{ churchName: string }> = ({ churchName }) => {
         if (roleLoading || !role || (item.roles && !item.roles.includes(role))) {
           return null;
         }
+        
         const isActive = location.pathname === item.href || location.pathname.startsWith(item.href + '/');
         const Icon = item.icon;
+        
         return (
-          <Link
-            key={item.href}
+          <Link 
+            key={item.href} 
             to={item.href}
             className={cn(
               "flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:text-primary",
-              isActive
-                ? "bg-muted text-primary"
-                : "text-muted-foreground",
+              isActive ? "bg-muted text-primary" : "text-muted-foreground",
             )}
           >
             <Icon className="h-4 w-4" />
@@ -82,9 +94,10 @@ const Sidebar: React.FC<{ churchName: string }> = ({ churchName }) => {
           </Link>
         );
       })}
-      <Button
-        onClick={handleLogout}
-        variant="ghost"
+      
+      <Button 
+        onClick={handleLogout} 
+        variant="ghost" 
         className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary mt-4"
       >
         <LogOut className="h-4 w-4" />
