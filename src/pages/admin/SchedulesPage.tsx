@@ -31,6 +31,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { format } from 'date-fns';
 import { useSession } from '@/contexts/SessionContext';
+import { ptBR } from 'date-fns/locale';
 
 interface Schedule {
   id: string;
@@ -386,7 +387,7 @@ const SchedulesPage: React.FC = () => {
                 schedules?.map((schedule) => (
                   <TableRow key={schedule.id}>
                     <TableCell className="font-medium">{schedule.title}</TableCell>
-                    <TableCell>{format(new Date(schedule.schedule_date), 'dd/MM/yyyy')}</TableCell>
+                    <TableCell>{format(new Date(schedule.schedule_date), 'dd/MM/yyyy', { locale: ptBR })}</TableCell>
                     <TableCell>
                       {schedule.start_time && schedule.end_time
                         ? `${schedule.start_time} - ${schedule.end_time}`

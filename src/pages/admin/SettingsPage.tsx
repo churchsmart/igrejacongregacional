@@ -145,7 +145,9 @@ const SettingsPage: React.FC = () => {
           <DialogHeader>
             <DialogTitle>{settings ? 'Editar Configurações da Igreja' : 'Adicionar Configurações da Igreja'}</DialogTitle>
             <DialogDescription>
-              {settings ? 'Atualize as informações gerais da sua igreja.' : 'Adicione as informações iniciais da sua igreja.'}
+              {settings
+                ? 'Atualize as informações gerais da sua igreja.'
+                : 'Adicione as informações iniciais da sua igreja.'}
             </DialogDescription>
           </DialogHeader>
           <ChurchSettingsForm

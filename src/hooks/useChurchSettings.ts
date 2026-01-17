@@ -18,7 +18,6 @@ export const useChurchSettings = () => {
     queryKey: ['churchSettings'],
     queryFn: async () => {
       console.log("[useChurchSettings] Fetching church settings");
-      
       const { data, error } = await supabase
         .from('church_settings')
         .select('*')
@@ -28,7 +27,7 @@ export const useChurchSettings = () => {
         console.error("[useChurchSettings] Error fetching settings:", error);
         throw new Error(error.message);
       }
-      
+
       console.log("[useChurchSettings] Settings fetched:", data);
       return data;
     },

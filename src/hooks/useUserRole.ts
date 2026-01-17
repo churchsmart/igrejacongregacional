@@ -6,14 +6,13 @@ export type UserRole = 'master' | 'admin' | 'leader' | 'editor' | 'member';
 
 export const useUserRole = () => {
   const { user, loading: sessionLoading } = useSession();
-
+  
   const { data: role, isLoading, error } = useQuery<UserRole | null, Error>({
     queryKey: ['userRole', user?.id],
     queryFn: async () => {
       if (!user) return null;
       
       console.log("[useUserRole] Fetching role for user:", user.id);
-      
       const { data, error } = await supabase
         .from('profiles')
         .select('role')

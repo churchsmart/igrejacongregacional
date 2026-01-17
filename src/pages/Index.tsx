@@ -30,9 +30,9 @@ const Index = () => {
       <div className="text-center max-w-4xl mx-auto">
         {/* Church Logo */}
         <div className="mb-8">
-          <img
-            src={churchLogo}
-            alt={`${churchName} Logo`}
+          <img 
+            src={churchLogo} 
+            alt={`${churchName} Logo`} 
             className="mx-auto h-32 w-32 rounded-full object-cover border-4 border-primary"
             onError={(e) => {
               const target = e.target as HTMLImageElement;
@@ -64,15 +64,15 @@ const Index = () => {
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 max-w-2xl mx-auto">
           <h3 className="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-200">Acesso Rápido</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <a
-              href="/admin/bible"
+            <a 
+              href="/admin/bible" 
               className="bg-primary text-primary-foreground rounded-lg p-4 text-center hover:bg-primary/90 transition-colors"
             >
               <div className="text-2xl mb-2">📖</div>
               <div className="font-medium">Leitura Bíblica</div>
             </a>
-            <a
-              href="/admin/events"
+            <a 
+              href="/admin/events" 
               className="bg-secondary text-secondary-foreground rounded-lg p-4 text-center hover:bg-secondary/90 transition-colors"
             >
               <div className="text-2xl mb-2">📅</div>

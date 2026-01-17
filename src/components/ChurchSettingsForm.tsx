@@ -98,7 +98,11 @@ const ChurchSettingsForm: React.FC<ChurchSettingsFormProps> = ({
             <FormItem>
               <FormLabel>Descrição</FormLabel>
               <FormControl>
-                <Textarea placeholder="Uma breve descrição sobre a igreja." className="resize-y" {...field} />
+                <Textarea
+                  placeholder="Uma breve descrição sobre a igreja."
+                  className="resize-y"
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>

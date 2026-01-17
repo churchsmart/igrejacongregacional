@@ -56,7 +56,6 @@ const EventsPage: React.FC = () => {
     queryKey: ['events'],
     queryFn: async () => {
       console.log("[EventsPage] Fetching events");
-      
       const { data, error } = await supabase
         .from('events')
         .select('*')
@@ -77,9 +76,7 @@ const EventsPage: React.FC = () => {
   const createEventMutation = useMutation({
     mutationFn: async (newEvent: Omit<Event, 'id' | 'created_at' | 'updated_at' | 'created_by'>) => {
       if (!currentUser?.id) throw new Error("User not authenticated.");
-      
       console.log("[EventsPage] Creating event:", newEvent);
-      
       const { data, error } = await supabase
         .from('events')
         .insert({
@@ -113,7 +110,6 @@ const EventsPage: React.FC = () => {
   const updateEventMutation = useMutation({
     mutationFn: async (updatedEvent: Omit<Event, 'created_at' | 'updated_at' | 'created_by'>) => {
       console.log("[EventsPage] Updating event:", updatedEvent);
-      
       const { id, event_date, ...rest } = updatedEvent;
       const { data, error } = await supabase
         .from('events')
@@ -149,7 +145,6 @@ const EventsPage: React.FC = () => {
   const deleteEventMutation = useMutation({
     mutationFn: async (eventId: string) => {
       console.log("[EventsPage] Deleting event:", eventId);
-      
       const { error } = await supabase
         .from('events')
         .delete()
@@ -175,7 +170,6 @@ const EventsPage: React.FC = () => {
 
   const handleFormSubmit = (values: any) => {
     console.log("[EventsPage] Form submitted:", values);
-    
     if (editingEvent) {
       updateEventMutation.mutate({ ...values, id: editingEvent.id });
     } else {
@@ -298,12 +292,15 @@ const EventsPage: React.FC = () => {
             </TableBody>
           </Table>
         </div>
+
         <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
               <DialogTitle>{editingEvent ? 'Editar Evento' : 'Adicionar Novo Evento'}</DialogTitle>
               <DialogDescription>
-                {editingEvent ? 'Faça alterações no evento aqui.' : 'Crie um novo evento para sua igreja.'}
+                {editingEvent
+                  ? 'Faça alterações no evento aqui.'
+                  : 'Crie um novo evento para sua igreja.'}
               </DialogDescription>
             </DialogHeader>
             <EventForm

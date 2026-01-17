@@ -22,6 +22,7 @@ import { CalendarIcon } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { ptBR } from 'date-fns/locale';
 
 const timeRegex = /^([01]\d|2[0-3]):([0-5]\d)$/; // HH:MM format
 
@@ -105,7 +106,11 @@ const EventForm: React.FC<EventFormProps> = ({
             <FormItem>
               <FormLabel>Descrição</FormLabel>
               <FormControl>
-                <Textarea placeholder="Detalhes sobre o evento, palestrantes, programação, etc." className="resize-y" {...field} />
+                <Textarea
+                  placeholder="Detalhes sobre o evento, palestrantes, programação, etc."
+                  className="resize-y"
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -127,7 +132,11 @@ const EventForm: React.FC<EventFormProps> = ({
                         !field.value && "text-muted-foreground"
                       )}
                     >
-                      {field.value ? format(field.value, "PPP") : <span>Selecione uma data</span>}
+                      {field.value ? (
+                        format(field.value, "PPP", { locale: ptBR })
+                      ) : (
+                        <span>Selecione uma data</span>
+                      )}
                       <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                     </Button>
                   </FormControl>
@@ -138,6 +147,7 @@ const EventForm: React.FC<EventFormProps> = ({
                     selected={field.value}
                     onSelect={field.onChange}
                     initialFocus
+                    locale={ptBR}
                   />
                 </PopoverContent>
               </Popover>
