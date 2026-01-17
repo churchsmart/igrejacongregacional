@@ -20,14 +20,17 @@ interface PrayerRequest {
   is_answered: boolean;
   created_at: string;
   updated_at: string;
-  user_email?: string;
+}
+
+interface PrayerRequestWithUser extends PrayerRequest {
+  user_email: string;
 }
 
 const PrayerRequestsPage: React.FC = () => {
   const queryClient = useQueryClient();
   const { role: currentUserRole, isLoading: roleLoading } = useUserRole();
 
-  const { data: requests, isLoading: requestsLoading, error: requestsError } = useQuery<PrayerRequest[], Error>({
+  const { data: requests, isLoading: requestsLoading, error: requestsError } = useQuery<PrayerRequestWithUser[], Error>({
     queryKey: ['prayerRequests'],
     queryFn: async () => {
       // Obter pedidos de oração com dados do usuário
@@ -40,10 +43,14 @@ const PrayerRequestsPage: React.FC = () => {
         throw new Error(error.message);
       }
       
-      return data.map(request => ({
-        ...request,
-        user_email: (request as any).user_email?.email || 'N/A'
-      })) as PrayerRequest[];
+      return data.map(request => {
+        const user_email = (request as any).user_email?.email || 'N/A';
+        const { user_email: _, ...requestWithoutUserEmail } = request as any;
+        return {
+          ...requestWithoutUserEmail,
+          user_email
+        } as PrayerRequestWithUser;
+      });
     },
     enabled: !roleLoading && (currentUserRole === 'master' || currentUserRole === 'admin'),
   });
