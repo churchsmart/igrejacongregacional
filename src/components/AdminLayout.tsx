@@ -23,6 +23,7 @@ const AdminLayout: React.FC = () => {
   }
 
   if (settingsError) {
+    console.error("[AdminLayout] Error loading church settings:", settingsError);
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900">
         <Card className="p-8 text-center">
@@ -42,14 +43,13 @@ const AdminLayout: React.FC = () => {
       <Sidebar churchName={churchName} />
       <div className="flex flex-col">
         <header className="flex h-14 items-center gap-4 border-b bg-muted/40 px-4 lg:h-[60px] lg:px-6 md:hidden">
-          {/* Mobile sidebar trigger is inside Sidebar component */}
           <Sidebar churchName={churchName} />
           <Link to="/admin" className="flex items-center gap-2 font-semibold">
             <span className="text-xl font-bold">{churchName}</span>
           </Link>
         </header>
         <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6">
-          <Outlet /> {/* This is where nested routes will render */}
+          <Outlet />
         </main>
         <MadeWithDyad />
       </div>

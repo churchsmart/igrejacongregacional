@@ -74,11 +74,7 @@ const DepartmentForm: React.FC<DepartmentFormProps> = ({
             <FormItem>
               <FormLabel>Descrição</FormLabel>
               <FormControl>
-                <Textarea
-                  placeholder="Uma breve descrição sobre o departamento."
-                  className="resize-y"
-                  {...field}
-                />
+                <Textarea placeholder="Uma breve descrição sobre o departamento." className="resize-y" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

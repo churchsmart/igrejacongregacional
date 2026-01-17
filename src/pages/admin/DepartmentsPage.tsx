@@ -46,14 +46,19 @@ const DepartmentsPage: React.FC = () => {
   const { data: departments, isLoading: departmentsLoading, error: departmentsError } = useQuery<Department[], Error>({
     queryKey: ['departments'],
     queryFn: async () => {
+      console.log("[DepartmentsPage] Fetching departments");
+      
       const { data, error } = await supabase
         .from('departments')
         .select('*')
         .order('name', { ascending: true });
 
       if (error) {
+        console.error("[DepartmentsPage] Error fetching departments:", error);
         throw new Error(error.message);
       }
+      
+      console.log("[DepartmentsPage] Departments fetched:", data);
       return data;
     },
     enabled: !roleLoading && (currentUserRole === 'master' || currentUserRole === 'admin' || currentUserRole === 'leader'),
@@ -61,6 +66,8 @@ const DepartmentsPage: React.FC = () => {
 
   const createDepartmentMutation = useMutation({
     mutationFn: async (newDepartment: { name: string; description?: string }) => {
+      console.log("[DepartmentsPage] Creating department:", newDepartment);
+      
       const { data, error } = await supabase
         .from('departments')
         .insert(newDepartment)
@@ -68,8 +75,11 @@ const DepartmentsPage: React.FC = () => {
         .single();
 
       if (error) {
+        console.error("[DepartmentsPage] Error creating department:", error);
         throw new Error(error.message);
       }
+      
+      console.log("[DepartmentsPage] Department created:", data);
       return data;
     },
     onSuccess: () => {
@@ -86,16 +96,25 @@ const DepartmentsPage: React.FC = () => {
 
   const updateDepartmentMutation = useMutation({
     mutationFn: async (updatedDepartment: Department) => {
+      console.log("[DepartmentsPage] Updating department:", updatedDepartment);
+      
       const { data, error } = await supabase
         .from('departments')
-        .update({ name: updatedDepartment.name, description: updatedDepartment.description, updated_at: new Date().toISOString() })
+        .update({
+          name: updatedDepartment.name,
+          description: updatedDepartment.description,
+          updated_at: new Date().toISOString()
+        })
         .eq('id', updatedDepartment.id)
         .select()
         .single();
 
       if (error) {
+        console.error("[DepartmentsPage] Error updating department:", error);
         throw new Error(error.message);
       }
+      
+      console.log("[DepartmentsPage] Department updated:", data);
       return data;
     },
     onSuccess: () => {
@@ -112,14 +131,19 @@ const DepartmentsPage: React.FC = () => {
 
   const deleteDepartmentMutation = useMutation({
     mutationFn: async (departmentId: string) => {
+      console.log("[DepartmentsPage] Deleting department:", departmentId);
+      
       const { error } = await supabase
         .from('departments')
         .delete()
         .eq('id', departmentId);
 
       if (error) {
+        console.error("[DepartmentsPage] Error deleting department:", error);
         throw new Error(error.message);
       }
+      
+      console.log("[DepartmentsPage] Department deleted:", departmentId);
       return departmentId;
     },
     onSuccess: () => {
@@ -133,6 +157,8 @@ const DepartmentsPage: React.FC = () => {
   });
 
   const handleFormSubmit = (values: any) => {
+    console.log("[DepartmentsPage] Form submitted:", values);
+    
     if (editingDepartment) {
       updateDepartmentMutation.mutate({ ...values, id: editingDepartment.id, created_at: editingDepartment.created_at, updated_at: editingDepartment.updated_at });
     } else {
@@ -244,15 +270,12 @@ const DepartmentsPage: React.FC = () => {
             </TableBody>
           </Table>
         </div>
-
         <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
               <DialogTitle>{editingDepartment ? 'Editar Departamento' : 'Adicionar Novo Departamento'}</DialogTitle>
               <DialogDescription>
-                {editingDepartment
-                  ? 'Faça alterações no departamento aqui.'
-                  : 'Crie um novo departamento para organizar sua igreja.'}
+                {editingDepartment ? 'Faça alterações no departamento aqui.' : 'Crie um novo departamento para organizar sua igreja.'}
               </DialogDescription>
             </DialogHeader>
             <DepartmentForm

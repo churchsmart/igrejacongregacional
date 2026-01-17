@@ -17,14 +17,19 @@ export const useChurchSettings = () => {
   const { data, isLoading, error } = useQuery<ChurchSettings[], Error>({
     queryKey: ['churchSettings'],
     queryFn: async () => {
+      console.log("[useChurchSettings] Fetching church settings");
+      
       const { data, error } = await supabase
         .from('church_settings')
         .select('*')
         .limit(1); // Assuming there's only one global settings entry
 
       if (error) {
+        console.error("[useChurchSettings] Error fetching settings:", error);
         throw new Error(error.message);
       }
+      
+      console.log("[useChurchSettings] Settings fetched:", data);
       return data;
     },
   });
@@ -34,10 +39,6 @@ export const useChurchSettings = () => {
   useEffect(() => {
     if (settings?.church_name) {
       document.title = settings.church_name;
-      // Note: Dynamically updating manifest.json is not directly possible from client-side JavaScript
-      // as it's a static file served by the web server. If truly dynamic manifest content
-      // is required, a server-side endpoint would be needed to generate it.
-      // For now, the browser tab title will reflect the church name.
     } else {
       document.title = "Dyad Church App";
     }

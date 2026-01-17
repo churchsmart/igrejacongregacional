@@ -35,6 +35,8 @@ const SettingsPage: React.FC = () => {
 
   const updateSettingsMutation = useMutation({
     mutationFn: async (updatedSettings: Omit<ChurchSettings, 'id' | 'updated_at' | 'social_links'>) => {
+      console.log("[SettingsPage] Updating settings:", updatedSettings);
+      
       if (!settings?.id) {
         // If no settings exist, create them
         const { data, error } = await supabase
@@ -43,7 +45,12 @@ const SettingsPage: React.FC = () => {
           .select()
           .single();
 
-        if (error) throw new Error(error.message);
+        if (error) {
+          console.error("[SettingsPage] Error creating settings:", error);
+          throw new Error(error.message);
+        }
+        
+        console.log("[SettingsPage] Settings created:", data);
         return data;
       } else {
         // Otherwise, update existing settings
@@ -54,7 +61,12 @@ const SettingsPage: React.FC = () => {
           .select()
           .single();
 
-        if (error) throw new Error(error.message);
+        if (error) {
+          console.error("[SettingsPage] Error updating settings:", error);
+          throw new Error(error.message);
+        }
+        
+        console.log("[SettingsPage] Settings updated:", data);
         return data;
       }
     },
@@ -70,6 +82,7 @@ const SettingsPage: React.FC = () => {
   });
 
   const handleFormSubmit = (values: any) => {
+    console.log("[SettingsPage] Form submitted:", values);
     updateSettingsMutation.mutate(values);
   };
 
@@ -121,7 +134,6 @@ const SettingsPage: React.FC = () => {
             <p><strong>Email de Contato:</strong> {settings.contact_email || 'N/A'}</p>
             <p><strong>Telefone de Contato:</strong> {settings.contact_phone || 'N/A'}</p>
             <p><strong>URL do Logo:</strong> {settings.logo_url ? <a href={settings.logo_url} target="_blank" rel="noopener noreferrer" className="text-blue-500 underline">{settings.logo_url}</a> : 'N/A'}</p>
-            {/* Add more fields as needed */}
           </div>
         ) : (
           <p className="text-gray-500">Nenhuma configuração encontrada. Clique em "Editar Configurações" para adicionar.</p>
@@ -133,9 +145,7 @@ const SettingsPage: React.FC = () => {
           <DialogHeader>
             <DialogTitle>{settings ? 'Editar Configurações da Igreja' : 'Adicionar Configurações da Igreja'}</DialogTitle>
             <DialogDescription>
-              {settings
-                ? 'Atualize as informações gerais da sua igreja.'
-                : 'Adicione as informações iniciais da sua igreja.'}
+              {settings ? 'Atualize as informações gerais da sua igreja.' : 'Adicione as informações iniciais da sua igreja.'}
             </DialogDescription>
           </DialogHeader>
           <ChurchSettingsForm

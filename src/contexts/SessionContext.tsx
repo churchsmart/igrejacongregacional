@@ -20,44 +20,58 @@ export const SessionContextProvider: React.FC<{ children: React.ReactNode }> = (
   const location = useLocation();
 
   useEffect(() => {
+    console.log("[SessionContext] Initializing auth state listener");
+    
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, currentSession) => {
-        console.log("[SessionContext] Auth state change:", event, currentSession);
+        console.log("[SessionContext] Auth state change:", event, currentSession?.user?.id);
         setSession(currentSession);
         setUser(currentSession?.user || null);
-        setLoading(false);
-
-        if (event === 'SIGNED_IN') {
-          toast.success('Login successful!');
-          // Redirect authenticated users to admin dashboard if they were on login or root
-          if (location.pathname === '/login' || location.pathname === '/') {
+        
+        if (event === 'INITIAL_SESSION') {
+          console.log("[SessionContext] Initial session loaded");
+          setLoading(false);
+        } else if (event === 'SIGNED_IN') {
+          console.log("[SessionContext] User signed in");
+          toast.success('Login realizado com sucesso!');
+          // Only redirect if user was on login page
+          if (location.pathname === '/login') {
             navigate('/admin');
           }
+          setLoading(false);
         } else if (event === 'SIGNED_OUT') {
-          toast.success('Logged out successfully.');
-          // Redirect unauthenticated users to login page if they were in admin
+          console.log("[SessionContext] User signed out");
+          toast.success('Logout realizado com sucesso.');
+          // Only redirect if user was in admin area
           if (location.pathname.startsWith('/admin')) {
             navigate('/login');
           }
+          setLoading(false);
+        } else {
+          setLoading(false);
         }
-        // AUTH_API_ERROR is not a direct event type from onAuthStateChange.
-        // Errors are typically handled when making specific auth calls or via session object.
       }
     );
 
     // Fetch initial session
     supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
+      console.log("[SessionContext] Initial session fetch result:", !!initialSession);
       setSession(initialSession);
       setUser(initialSession?.user || null);
       setLoading(false);
-      if (initialSession && (location.pathname === '/login' || location.pathname === '/')) {
-        navigate('/admin'); // If already logged in, go to admin
+      
+      // Redirect logic for initial load
+      if (initialSession && location.pathname === '/login') {
+        navigate('/admin');
       } else if (!initialSession && location.pathname.startsWith('/admin')) {
-        navigate('/login'); // If not logged in and trying to access admin, go to login
+        navigate('/login');
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      console.log("[SessionContext] Cleaning up auth listener");
+      subscription.unsubscribe();
+    };
   }, [navigate, location.pathname]);
 
   return (

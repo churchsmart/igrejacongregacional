@@ -20,7 +20,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 import { CalendarIcon } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
@@ -36,9 +40,7 @@ const memberFormSchema = z.object({
   address: z.string().optional(),
   birth_date: z.date().optional().nullable(),
   department_id: z.string().uuid({ message: 'Departamento inválido.' }).optional().nullable(),
-  status: z.enum(['active', 'inactive'], {
-    required_error: 'O status é obrigatório.',
-  }),
+  status: z.enum(['active', 'inactive'], { required_error: 'O status é obrigatório.' }),
 });
 
 type MemberFormValues = z.infer<typeof memberFormSchema>;
@@ -94,8 +96,19 @@ const MemberForm: React.FC<MemberFormProps> = ({
   const { data: departments, isLoading: departmentsLoading } = useQuery<{ id: string; name: string }[], Error>({
     queryKey: ['departments'],
     queryFn: async () => {
-      const { data, error } = await supabase.from('departments').select('id, name').order('name', { ascending: true });
-      if (error) throw new Error(error.message);
+      console.log("[MemberForm] Fetching departments");
+      
+      const { data, error } = await supabase
+        .from('departments')
+        .select('id, name')
+        .order('name', { ascending: true });
+
+      if (error) {
+        console.error("[MemberForm] Error fetching departments:", error);
+        throw new Error(error.message);
+      }
+      
+      console.log("[MemberForm] Departments fetched:", data);
       return data;
     },
   });
@@ -218,7 +231,7 @@ const MemberForm: React.FC<MemberFormProps> = ({
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="">Nenhum</SelectItem> {/* Option for no department */}
+                  <SelectItem value="">Nenhum</SelectItem>
                   {departments?.map((dept) => (
                     <SelectItem key={dept.id} value={dept.id}>
                       {dept.name}

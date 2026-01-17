@@ -55,25 +55,33 @@ const MembersPage: React.FC = () => {
   const { data: members, isLoading: membersLoading, error: membersError } = useQuery<Member[], Error>({
     queryKey: ['members'],
     queryFn: async () => {
+      console.log("[MembersPage] Fetching members");
+      
       const { data, error } = await supabase
         .from('members')
         .select('*, departments(name)') // Select department name
         .order('first_name', { ascending: true });
 
       if (error) {
+        console.error("[MembersPage] Error fetching members:", error);
         throw new Error(error.message);
       }
 
-      return data.map(member => ({
+      const result = data.map(member => ({
         ...member,
         department_name: (member as any).departments?.name || 'N/A',
       })) as Member[];
+      
+      console.log("[MembersPage] Members fetched:", result);
+      return result;
     },
     enabled: !roleLoading && (currentUserRole === 'master' || currentUserRole === 'admin' || currentUserRole === 'leader' || currentUserRole === 'editor'),
   });
 
   const createMemberMutation = useMutation({
     mutationFn: async (newMember: Omit<Member, 'id' | 'created_at' | 'updated_at' | 'department_name'>) => {
+      console.log("[MembersPage] Creating member:", newMember);
+      
       const { data, error } = await supabase
         .from('members')
         .insert({
@@ -85,8 +93,11 @@ const MembersPage: React.FC = () => {
         .single();
 
       if (error) {
+        console.error("[MembersPage] Error creating member:", error);
         throw new Error(error.message);
       }
+      
+      console.log("[MembersPage] Member created:", data);
       return data;
     },
     onSuccess: () => {
@@ -103,6 +114,8 @@ const MembersPage: React.FC = () => {
 
   const updateMemberMutation = useMutation({
     mutationFn: async (updatedMember: Omit<Member, 'created_at' | 'updated_at' | 'department_name'>) => {
+      console.log("[MembersPage] Updating member:", updatedMember);
+      
       const { id, birth_date, department_id, ...rest } = updatedMember;
       const { data, error } = await supabase
         .from('members')
@@ -117,8 +130,11 @@ const MembersPage: React.FC = () => {
         .single();
 
       if (error) {
+        console.error("[MembersPage] Error updating member:", error);
         throw new Error(error.message);
       }
+      
+      console.log("[MembersPage] Member updated:", data);
       return data;
     },
     onSuccess: () => {
@@ -135,14 +151,19 @@ const MembersPage: React.FC = () => {
 
   const deleteMemberMutation = useMutation({
     mutationFn: async (memberId: string) => {
+      console.log("[MembersPage] Deleting member:", memberId);
+      
       const { error } = await supabase
         .from('members')
         .delete()
         .eq('id', memberId);
 
       if (error) {
+        console.error("[MembersPage] Error deleting member:", error);
         throw new Error(error.message);
       }
+      
+      console.log("[MembersPage] Member deleted:", memberId);
       return memberId;
     },
     onSuccess: () => {
@@ -156,6 +177,8 @@ const MembersPage: React.FC = () => {
   });
 
   const handleFormSubmit = (values: any) => {
+    console.log("[MembersPage] Form submitted:", values);
+    
     if (editingMember) {
       updateMemberMutation.mutate({ ...values, id: editingMember.id });
     } else {
@@ -194,7 +217,7 @@ const MembersPage: React.FC = () => {
     return <p className="text-red-500">Erro ao carregar membros: {membersError.message}</p>;
   }
 
-  if (!canManageMembers && currentUserRole !== 'member') { // 'member' role can't even view this page
+  if (!canManageMembers && currentUserRole !== 'member') {
     return (
       <Card className="w-full">
         <CardHeader>
@@ -280,15 +303,12 @@ const MembersPage: React.FC = () => {
             </TableBody>
           </Table>
         </div>
-
         <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
               <DialogTitle>{editingMember ? 'Editar Membro' : 'Adicionar Novo Membro'}</DialogTitle>
               <DialogDescription>
-                {editingMember
-                  ? 'Faça alterações no perfil do membro aqui.'
-                  : 'Crie um novo membro e vincule-o a um departamento.'}
+                {editingMember ? 'Faça alterações no perfil do membro aqui.' : 'Crie um novo membro e vincule-o a um departamento.'}
               </DialogDescription>
             </DialogHeader>
             <MemberForm

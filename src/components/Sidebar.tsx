@@ -36,7 +36,7 @@ const navItems: NavItem[] = [
   { href: "/admin/events", label: "Eventos", icon: Calendar, roles: ['master', 'admin', 'editor'] },
   { href: "/admin/media", label: "Mídia", icon: Image, roles: ['master', 'admin', 'editor'] },
   { href: "/admin/galleries", label: "Galerias", icon: Image, roles: ['master', 'admin', 'editor'] },
-  { href: "/admin/bible", label: "Bíblia", icon: BookOpenText, roles: ['master', 'admin', 'editor'] },
+  { href: "/admin/bible", label: "Bíblia", icon: BookOpenText, roles: ['master', 'admin', 'editor', 'member'] },
   { href: "/admin/settings", label: "Configurações", icon: Settings, roles: ['master', 'admin'] },
 ];
 
@@ -50,8 +50,9 @@ const Sidebar: React.FC<{ churchName: string }> = ({ churchName }) => {
     const { error } = await supabase.auth.signOut();
     if (error) {
       console.error("[Sidebar] Logout error:", error.message);
-      toast.error("Failed to log out: " + error.message);
+      toast.error("Erro ao sair: " + error.message);
     } else {
+      toast.success('Logout realizado com sucesso.');
       navigate('/login');
     }
   };
@@ -63,7 +64,7 @@ const Sidebar: React.FC<{ churchName: string }> = ({ churchName }) => {
         if (roleLoading || !role || (item.roles && !item.roles.includes(role))) {
           return null;
         }
-        const isActive = location.pathname.startsWith(item.href);
+        const isActive = location.pathname === item.href || location.pathname.startsWith(item.href + '/');
         const Icon = item.icon;
         return (
           <Link

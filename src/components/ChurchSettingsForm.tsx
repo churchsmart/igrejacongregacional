@@ -20,7 +20,6 @@ const churchSettingsFormSchema = z.object({
   description: z.string().optional(),
   contact_phone: z.string().optional(),
   contact_email: z.string().email({ message: 'Email de contato inválido.' }).optional().or(z.literal('')),
-  // social_links is more complex, we'll keep it simple for now or handle separately
 });
 
 type ChurchSettingsFormValues = z.infer<typeof churchSettingsFormSchema>;
@@ -99,11 +98,7 @@ const ChurchSettingsForm: React.FC<ChurchSettingsFormProps> = ({
             <FormItem>
               <FormLabel>Descrição</FormLabel>
               <FormControl>
-                <Textarea
-                  placeholder="Uma breve descrição sobre a igreja."
-                  className="resize-y"
-                  {...field}
-                />
+                <Textarea placeholder="Uma breve descrição sobre a igreja." className="resize-y" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

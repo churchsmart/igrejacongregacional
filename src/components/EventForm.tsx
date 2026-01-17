@@ -13,7 +13,11 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 import { CalendarIcon } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
@@ -101,11 +105,7 @@ const EventForm: React.FC<EventFormProps> = ({
             <FormItem>
               <FormLabel>Descrição</FormLabel>
               <FormControl>
-                <Textarea
-                  placeholder="Detalhes sobre o evento, palestrantes, programação, etc."
-                  className="resize-y"
-                  {...field}
-                />
+                <Textarea placeholder="Detalhes sobre o evento, palestrantes, programação, etc." className="resize-y" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

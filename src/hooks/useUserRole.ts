@@ -11,7 +11,9 @@ export const useUserRole = () => {
     queryKey: ['userRole', user?.id],
     queryFn: async () => {
       if (!user) return null;
-
+      
+      console.log("[useUserRole] Fetching role for user:", user.id);
+      
       const { data, error } = await supabase
         .from('profiles')
         .select('role')
@@ -19,11 +21,15 @@ export const useUserRole = () => {
         .single();
 
       if (error) {
+        console.error("[useUserRole] Error fetching user role:", error);
         throw new Error(error.message);
       }
+      
+      console.log("[useUserRole] Role fetched:", data.role);
       return data.role as UserRole;
     },
-    enabled: !!user && !sessionLoading, // Only run query if user is logged in and session is not loading
+    enabled: !!user && !sessionLoading,
+    staleTime: Infinity, // Role rarely changes, so we can cache it
   });
 
   return { role, isLoading: isLoading || sessionLoading, error };
